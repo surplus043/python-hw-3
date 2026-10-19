@@ -3,17 +3,17 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 class Item(BaseModel): #вводные данные для запроса, требование Pydantic в условии
-    numbers: list
-    delays: list
+    numbers: list[int]
+    delays: list[float]
 
-class CalcRes(BaseModel):
+class CalcRes(BaseModel): #промежуточное вычисление
     number: int
     square: int
     delay: float
     time: float
 
-class CalcFinal(BaseModel):
-    results: list
+class CalcFinal(BaseModel): #финальный вывод задачи
+    results: list[CalcRes]
     total_time: float
     parallel_faster_than_sequential: bool
 
@@ -45,11 +45,11 @@ async def create_item(item: Item) -> CalcFinal:
     
     #вызываем асинхронную функциюю для всех значений
     l=[]
-    for i in range(item.delays):
+    for i in range(len(item.delays)):
         l.append(execute_calculation(item.numbers[i],item.delays[i]))
     
     #теперь ожидаем каждый результат
-    res = await asyncio.gather(l)
+    res = await asyncio.gather(*l)
     t2=time.perf_counter()
     #возврат результатов с доп. подсчетами результатов работы
     total_time=round(t2-t1,2)
